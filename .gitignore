@@ -1,0 +1,22 @@
+# Secrets
+.env
+.env.local
+.env.production
+
+# Data volumes (if mounted as bind volumes)
+data/
+*.sql
+*.dump
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,82 @@
+# Vespera World — Plane Project Management (Optional)
+# Deploy separately if Dokploy handles one compose per project.
+# Or merge into main docker-compose.yml if your Dokploy setup supports it.
+
+name: vespera-plane
+
+services:
+  plane-web:
+    image: makeplane/plane-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=https://plane.yourdomain.com
+      - NEXT_PUBLIC_DEPLOY_URL=https://plane.yourdomain.com
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - plane-net
+
+  plane-api:
+    image: makeplane/plane-backend:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SECRET_KEY=${PLANE_SECRET_KEY}
+      - DATABASE_URL=postgres://plane:${PLANE_DB_PASSWORD}@plane-db:5432/plane
+      - REDIS_URL=redis://plane-redis:6379/
+      - EMAIL_HOST=${SMTP_HOST}
+      - EMAIL_PORT=${SMTP_PORT}
+      - EMAIL_HOST_USER=${SMTP_USER}
+      - EMAIL_HOST_PASSWORD=${SMTP_PASSWORD}
+    depends_on:
+      plane-db:
+        condition: service_healthy
+      plane-redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - plane-net
+
+  plane-db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=plane
+      - POSTGRES_PASSWORD=${PLANE_DB_PASSWORD}
+      - POSTGRES_DB=plane
+    volumes:
+      - plane_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plane"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - plane-net
+
+  plane-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - plane_redis_data:/data
+    networks:
+      - plane-net
+
+volumes:
+  plane_pg_data:
+  plane_redis_data:
+
+networks:
+  plane-net:
+    driver: bridge

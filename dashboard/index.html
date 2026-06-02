@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vespera World — Ops Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0b0f;
+    --card: #11131a;
+    --card-hover: #161924;
+    --border: #1e2230;
+    --text: #c7cddb;
+    --text-dim: #6b7280;
+    --accent: #22d3ee;
+    --accent-2: #a78bfa;
+    --success: #34d399;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    padding: 2rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  h1 {
+    font-size: 1.75rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .time { color: var(--text-dim); font-size: .9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all .2s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .card:hover {
+    background: var(--card-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .75rem;
+  }
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+  }
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .status-dot.unknown { background: var(--text-dim); }
+  .status-dot.up { background: var(--success); box-shadow: 0 0 8px rgba(52,211,153,.4); }
+  .status-dot.down { background: var(--danger); box-shadow: 0 0 8px rgba(248,113,113,.4); }
+  .status-dot.warn { background: var(--warn); box-shadow: 0 0 8px rgba(251,191,36,.4); }
+  .card-desc { color: var(--text-dim); font-size: .85rem; margin-bottom: .75rem; }
+  .card-meta { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .tag {
+    font-size: .7rem;
+    padding: .2rem .5rem;
+    border-radius: 4px;
+    background: var(--card-hover);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .section-title {
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-dim);
+    margin: 2rem 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .quick-actions {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: .5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .85rem;
+    transition: all .2s;
+  }
+  .btn:hover {
+    background: var(--card-hover);
+    border-color: var(--accent);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none;
+    color: #000;
+    font-weight: 600;
+  }
+  .btn-primary:hover {
+    opacity: .9;
+  }
+  .footer {
+    margin-top: 3rem;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: .8rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Vespera World</h1>
+    <p class="time" id="clock">Loading...</p>
+  </div>
+  <div class="quick-actions">
+    <button class="btn" onclick="checkAll()">🔄 Refresh Status</button>
+    <button class="btn btn-primary" onclick="window.open('https://github.com/vespera-world','_blank')">🐛 GitHub Org</button>
+  </div>
+</header>
+
+<div class="section-title">Core Services</div>
+<div class="grid" id="services">
+  <!-- Cards injected by JS -->
+</div>
+
+<div class="section-title">Documentation</div>
+<div class="grid">
+  <a class="card" href="https://github.com/vespera-world/ops-homebase" target="_blank">
+    <div class="card-header">
+      <span class="card-title">📚 Ops Homebase Repo</span>
+      <span class="status-dot unknown" id="doc-repo"></span>
+    </div>
+    <div class="card-desc">Docker Compose stack, scripts, and configuration.</div>
+    <div class="card-meta">
+      <span class="tag">docker</span>
+      <span class="tag">dokploy</span>
+    </div>
+  </a>
+  <a class="card" href="#" onclick="alert('Open docs/hermes-n8n-integration.md in the repo')">
+    <div class="card-header">
+      <span class="card-title">🔗 Hermes ↔ n8n Spec</span>
+      <span class="status-dot unknown"></span>
+    </div>
+    <div class="card-desc">Webhook contract for agent-triggered workflows.</div>
+    <div class="card-meta">
+      <span class="tag">webhook</span>
+      <span class="tag">json</span>
+    </div>
+  </a>
+  <a class="card" href="https://supabase.com/dashboard" target="_blank">
+    <div class="card-header">
+      <span class="card-title">📡 Supabase Dashboard</span>
+      <span class="status-dot unknown" id="doc-supabase"></span>
+    </div>
+    <div class="card-desc">Database, Auth, Edge Functions, and Storage.</div>
+    <div class="card-meta">
+      <span class="tag">postgres</span>
+      <span class="tag">edge-functions</span>
+    </div>
+  </a>
+</div>
+
+<div class="section-title">External Resources</div>
+<div class="grid">
+  <a class="card" href="https://docs.n8n.io" target="_blank">
+    <div class="card-header"><span class="card-title">📖 n8n Docs</span></div>
+    <div class="card-desc">Workflow automation documentation.</div>
+  </a>
+  <a class="card" href="https://docs.budibase.com" target="_blank">
+    <div class="card-header"><span class="card-title">📖 Budibase Docs</span></div>
+    <div class="card-desc">Internal tool builder guides.</div>
+  </a>
+  <a class="card" href="https://appwrite.io/docs" target="_blank">
+    <div class="card-header"><span class="card-title">📖 Appwrite Docs</span></div>
+    <div class="card-desc">Backend-as-a-service API reference.</div>
+  </a>
+</div>
+
+<div class="footer">
+  Vespera World Ops Dashboard — <a href="https://github.com/vespera-world" style="color:var(--accent)">GitHub</a>
+</div>
+
+<script>
+const services = [
+  {
+    name: 'n8n',
+    title: 'n8n Workflows',
+    desc: 'Visual automation & integrations.',
+    url: 'https://n8n.vesperaworld.com',
+    tags: ['automation', 'workflows'],
+    checkPath: '/healthz'
+  },
+  {
+    name: 'budibase',
+    title: 'Budibase',
+    desc: 'Internal tools & dashboards.',
+    url: 'https://home.vesperaworld.com',
+    tags: ['low-code', 'dashboards'],
+    checkPath: '/health'
+  },
+  {
+    name: 'codeserver',
+    title: 'code-server',
+    desc: 'Browser-based VS Code IDE.',
+    url: 'https://code.vesperaworld.com',
+    tags: ['ide', 'development'],
+    checkPath: '/healthz'
+  },
+  {
+    name: 'appwrite',
+    title: 'Appwrite',
+    desc: 'Self-hosted auth, DB, storage.',
+    url: 'https://appwrite.vesperaworld.com',
+    tags: ['backend', 'auth'],
+    checkPath: null
+  },
+  {
+    name: 'hermes',
+    title: 'Hermes Gateway',
+    desc: 'AI agent & messaging gateway.',
+    url: 'https://hermes.vesperaworld.com',
+    tags: ['ai', 'telegram', 'whatsapp'],
+    checkPath: '/v1/models'
+  },
+  {
+    name: 'plane',
+    title: 'Plane',
+    desc: 'Project management & tasks.',
+    url: 'https://plane.vesperaworld.com',
+    tags: ['project-mgmt', 'kanban'],
+    checkPath: null
+  }
+];
+
+function renderServices() {
+  const grid = document.getElementById('services');
+  grid.innerHTML = services.map(s => `
+    <a class="card" href="${s.url}" target="_blank" id="card-${s.name}">
+      <div class="card-header">
+        <span class="card-title">${s.title}</span>
+        <span class="status-dot unknown" id="status-${s.name}"></span>
+      </div>
+      <div class="card-desc">${s.desc}</div>
+      <div class="card-meta">
+        ${s.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>
+    </a>
+  `).join('');
+}
+
+async function checkService(s) {
+  const dot = document.getElementById(`status-${s.name}`);
+  if (!dot) return;
+  if (!s.checkPath) {
+    dot.className = 'status-dot unknown';
+    return;
+  }
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const resp = await fetch(s.url + s.checkPath, { 
+      method: 'HEAD', 
+      mode: 'no-cors',
+      signal: controller.signal 
+    });
+    clearTimeout(timeout);
+    dot.className = 'status-dot up';
+  } catch (e) {
+    // no-cors HEAD may throw; try GET as fallback
+    try {
+      await fetch(s.url, { mode: 'no-cors', signal: AbortSignal.timeout(5000) });
+      dot.className = 'status-dot up';
+    } catch {
+      dot.className = 'status-dot down';
+    }
+  }
+}
+
+async function checkAll() {
+  for (const s of services) {
+    checkService(s);
+    await new Promise(r => setTimeout(r, 200));
+  }
+}
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleString();
+}
+
+renderServices();
+checkAll();
+updateClock();
+setInterval(updateClock, 1000);
+setInterval(checkAll, 60000);
+</script>
+
+</body>
+</html>
