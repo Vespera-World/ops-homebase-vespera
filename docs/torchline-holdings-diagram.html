@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torchline Holdings Group — Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: #020617;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+  .header {
+    text-align: center; padding: 40px 20px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .header h1 { font-size: 28px; color: #fbbf24; margin-bottom: 8px; }
+  .header p { font-size: 12px; color: #94a3b8; }
+  .diagram-container {
+    max-width: 1200px; margin: 40px auto; padding: 20px;
+    background: #0f172a; border: 1px solid #1e293b;
+    border-radius: 12px;
+  }
+  .legend {
+    display: flex; gap: 24px; justify-content: center;
+    margin-top: 30px; padding: 20px; background: #0f172a;
+    border-radius: 8px; border: 1px solid #1e293b;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: #94a3b8;
+  }
+  .legend-box { width: 16px; height: 16px; border-radius: 4px; border: 2px solid; }
+  .legend-box.sacred { background: rgba(136, 19, 55, 0.4); border-color: #fb7185; }
+  .legend-box.prometheus { background: rgba(8, 51, 68, 0.4); border-color: #22d3ee; }
+  .legend-box.prysm { background: rgba(251, 146, 60, 0.3); border-color: #fb923c; }
+  .legend-box.shared { background: rgba(76, 29, 149, 0.4); border-color: #a78bfa; }
+  .branch-item {
+    background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; padding: 12px;
+    margin: 6px 0; font-size: 11px;
+  }
+  .summary-grid {
+    max-width: 1200px; margin: 40px auto; padding: 0 20px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: #0f172a; border: 1px solid #1e293b;
+    border-radius: 12px; padding: 24px;
+  }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .card-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .card-dot.sacred { background: #fb7185; box-shadow: 0 0 8px #fb7185; }
+  .card-dot.prometheus { background: #22d3ee; box-shadow: 0 0 8px #22d3ee; }
+  .card-dot.prysm { background: #fb923c; box-shadow: 0 0 8px #fb923c; }
+  .card h3 { font-size: 14px; color: #f1f5f9; }
+  .card ul { list-style: none; }
+  .card li {
+    font-size: 11px; color: #94a3b8;
+    padding: 4px 0; border-bottom: 1px solid #1e293b;
+  }
+  .card li:last-child { border-bottom: none; }
+  .card li span { color: #e2e8f0; font-weight: 500; }
+  .footer {
+    text-align: center; padding: 40px;
+    font-size: 10px; color: #475569;
+  }
+  table { width: 100%; font-size: 11px; }
+  th { text-align: left; color: #64748b; font-weight: 500; padding: 8px 4px; border-bottom: 1px solid #334155; }
+  td { padding: 6px 4px; color: #94a3b8; border-bottom: 1px solid #1e293b; }
+  .tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+  .tag.active { background: rgba(34, 211, 151, 0.15); color: #34d399; }
+  .tag.planning { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
+  .tag.deploying { background: rgba(34, 211, 239, 0.15); color: #22d3ee; }
+  .tag.defer { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+  @media (max-width: 768px) {
+    .summary-grid { grid-template-columns: 1fr; }
+    .legend { gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔥 TORCHLINE HOLDINGS GROUP</h1>
+  <p>Full-Stack Solutions Architecture — Chief Operations Agent: Max</p>
+</div>
+
+<div class="diagram-container">
+  <svg viewBox="0 0 1000 600" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+      </pattern>
+      <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+      </marker>
+    </defs>
+    <rect width="1000" height="600" fill="#020617"/>
+    <rect width="1000" height="600" fill="url(#grid)"/>
+
+    <!-- Parent Box -->
+    <rect x="320" y="30" width="360" height="60" rx="12" fill="rgba(251, 191, 36, 0.1)" stroke="#fbbf24" stroke-width="2" stroke-dasharray="8,4"/>
+    <text x="500" y="55" text-anchor="middle" fill="#fbbf24" font-size="14" font-weight="700">TORCHLINE HOLDINGS GROUP</text>
+    <text x="500" y="75" text-anchor="middle" fill="#94a3b8" font-size="9">Holding Company | Parent Brand</text>
+
+    <!-- Arrows down from parent -->
+    <line x1="430" y1="90" x2="430" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="500" y1="90" x2="500" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="570" y1="90" x2="570" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- Division 1: Sacred Stone (Vespera World) -->
+    <rect x="40" y="140" width="280" height="430" rx="8" fill="rgba(136, 19, 55, 0.08)" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,4"/>
+    <text x="180" y="165" text-anchor="middle" fill="#fb7185" font-size="12" font-weight="600">🛡️ SACRED STONE</text>
+    <text x="180" y="182" text-anchor="middle" fill="#94a3b8" font-size="8">Our Masterpiece — Everything in One</text>
+
+    <!-- Vespera Platform -->
+    <rect x="60" y="200" width="240" height="90" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+    <text x="180" y="225" text-anchor="middle" fill="#f1f5f9" font-size="11" font-weight="600">⚡ Vespera World Platform</text>
+    <text x="180" y="242" text-anchor="middle" fill="#94a3b8" font-size="8">Platform.vesp... | TELEGRAM mini-apps</text>
+    <text x="180" y="258" text-anchor="middle" fill="#94a3b8" font-size="8">AI agents | CRM | Payment split-engine</text>
+    <text x="180" y="274" text-anchor="middle" fill="#94a3b8" font-size="8">Creator onboarding → go-live pipeline</text>
+
+    <!-- Vespera Agency -->
+    <rect x="60" y="310" width="240" height="70" rx="6" fill="rgba(136, 19, 55, 0.25)" stroke="#fb7185" stroke-width="1.5"/>
+    <text x="180" y="335" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="600">🎬 Vespera World Agency</text>
+    <text x="180" y="352" text-anchor="middle" fill="#94a3b8" font-size="8">OF mgmt | Content | Pricing | Fan ops</text>
+    <text x="180" y="368" text-anchor="middle" fill="#94a3b8" font-size="8">50/50 split | Paxum payouts</text>
+
+    <!-- Vespera Marketplace -->
+    <rect x="60" y="400" width="240" height="50" rx="6" fill="rgba(136, 19, 55, 0.15)" stroke="#fb7185" stroke-width="1.5"/>
+    <text x="180" y="422" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="600">🛒 Vespera Marketplace</text>
+    <text x="180" y="438" text-anchor="middle" fill="#94a3b8" font-size="8">Digital products | Creator merch | Premium subscriptions</text>
+
+    <!-- Vespera Brands -->
+    <rect x="60" y="470" width="240" height="80" rx="6" fill="rgba(136, 19, 55, 0.1)" stroke="#fb7185" stroke-width="1"/>
+    <text x="180" y="492" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="600">🏷️ Trade Names</text>
+    <text x="180" y="510" text-anchor="middle" fill="#94a3b8" font-size="7">Platform.VesperaWorld.com | Vespera World</text>
+    <text x="180" y="525" text-anchor="middle" fill="#94a3b8" font-size="7">Mini-apps (Telegram, Shopify)</text>
+    <text x="180" y="540" text-anchor="middle" fill="#94a3b8" font-size="7">Flutter Apps | Coming soon</text>
+
+    <!-- Division 2: Prometheus -->
+    <rect x="360" y="140" width="280" height="430" rx="8" fill="rgba(8, 51, 68, 0.08)" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="4,4"/>
+    <text x="500" y="165" text-anchor="middle" fill="#22d3ee" font-size="12" font-weight="600">🔥 PROMETHEUS</text>
+    <text x="500" y="182" text-anchor="middle" fill="#94a3b8" font-size="8">Tech Solutions for Everyone</text>
+
+    <!-- Torchflow -->
+    <rect x="380" y="200" width="240" height="110" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="500" y="225" text-anchor="middle" fill="#f1f5f9" font-size="11" font-weight="600">⚡ Torchflow.AI</text>
+    <text x="500" y="242" text-anchor="middle" fill="#94a3b8" font-size="8">NO-CODE APP BUILDER | Prompt → Production</text>
+    <text x="500" y="258" text-anchor="middle" fill="#94a3b8" font-size="8">GitHub push | Database + Models included</text>
+    <text x="500" y="274" text-anchor="middle" fill="#94a3b8" font-size="8">White-label ready | Self-hostable</text>
+    <text x="500" y="290" text-anchor="middle" fill="#34d399" font-size="8">STATUS: Production</text>
+
+    <!-- Torchline Agency -->
+    <rect x="380" y="330" width="240" height="70" rx="6" fill="rgba(8, 51, 68, 0.25)" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="500" y="353" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="600">🧰 Torchline Services</text>
+    <text x="500" y="370" text-anchor="middle" fill="#94a3b8" font-size="8">Web Dev | IT Solutions | Software</text>
+    <text x="500" y="386" text-anchor="middle" fill="#94a3b8" font-size="8">API/MCP | Cloud Infra | Consulting</text>
+
+    <!-- Torchline Freight -->
+    <rect x="380" y="420" width="240" height="50" rx="6" fill="rgba(8, 51, 68, 0.15)" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="500" y="442" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="600">🚚 Torchline Freight</text>
+    <text x="500" y="458" text-anchor="middle" fill="#94a3b8" font-size="8">Logistics solutions | Supply chain tech</text>
+
+    <!-- Prometheus Brands -->
+    <rect x="380" y="490" width="240" height="60" rx="6" fill="rgba(8, 51, 68, 0.1)" stroke="#22d3ee" stroke-width="1"/>
+    <text x="500" y="512" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="600">🏷️ Trade Names</text>
+    <text x="500" y="530" text-anchor="middle" fill="#94a3b8" font-size="7">Torchflow.AI | Torchline | Torchline Freight</text>
+    <text x="500" y="540" text-anchor="middle" fill="#94a3b8" font-size="7">IT Solutions | Cloud Services | LLC Formations</text>
+
+    <!-- Division 3: PRYSM -->
+    <rect x="680" y="140" width="280" height="430" rx="8" fill="rgba(251, 146, 60, 0.08)" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4,4"/>
+    <text x="820" y="165" text-anchor="middle" fill="#fb923c" font-size="12" font-weight="600">💎 PRYSM</text>
+    <text x="820" y="182" text-anchor="middle" fill="#94a3b8" font-size="8">E-Commerce Marketplace</text>
+
+    <!-- Confitone -->
+    <rect x="700" y="200" width="240" height="60" rx="6" fill="rgba(251, 146, 60, 0.4)" stroke="#fb923c" stroke-width="1.5"/>
+    <text x="820" y="225" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="600">💪 Confitone</text>
+    <text x="820" y="242" text-anchor="middle" fill="#94a3b8" font-size="8">Fitness & Consumer Products</text>
+
+    <!-- Pride Harvest -->
+    <rect x="700" y="280" width="240" height="50" rx="6" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1.5"/>
+    <text x="820" y="302" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="600">☕ Pride Harvest</text>
+    <text x="820" y="318" text-anchor="middle" fill="#94a3b8" font-size="8">Lion's Mane + Colombian Coffee</text>
+
+    <!-- Torch & Ember -->
+    <rect x="700" y="350" width="240" height="50" rx="6" fill="rgba(251, 146, 60, 0.25)" stroke="#fb923c" stroke-width="1.5"/>
+    <text x="820" y="372" text-anchor="middle" fill="#f1f5f9" font-size="10" font-weight="600">🪑 Torch & Ember</text>
+    <text x="820" y="388" text-anchor="middle" fill="#94a3b8" font-size="8">Furniture Marketplace</text>
+
+    <!-- Dayanna Boutique -->
+    <rect x="700" y="420" width="240" height="40" rx="6" fill="rgba(251, 146, 60, 0.2)" stroke="#fb923c" stroke-width="1.5"/>
+    <text x="820" y="438" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="600">👗 Dayanna Boutique</text>
+    <text x="820" y="450" text-anchor="middle" fill="#94a3b8" font-size="7">Women's Fashion (Tijuana) — Partner Brand</text>
+
+    <!-- Planned brands -->
+    <rect x="700" y="480" width="240" height="70" rx="6" fill="rgba(251, 146, 60, 0.1)" stroke="#fb923c" stroke-width="1"/>
+    <text x="820" y="498" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="600">🏷️ Planned</text>
+    <text x="820" y="515" text-anchor="middle" fill="#94a3b8" font-size="7">Virtual Pharmacy | Lust & Luxe (Adult)</text>
+    <text x="820" y="528" text-anchor="middle" fill="#94a3b8" font-size="7">Essence & Aura (Perfume) | Vital Form (Supplements)</text>
+    <text x="820" y="540" text-anchor="middle" fill="#94a3b8" font-size="7">Channels: Amazon, Walmart, Target, Etsy, TikTok Shop</text>
+  </svg>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-box sacred"></div>
+      <span>Sacred Stone (Vespera World)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-box prometheus"></div>
+      <span>Prometheus (Torchline + Torchflow)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-box prysm"></div>
+      <span>PRYSM (E-Commerce)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-box shared"></div>
+      <span>Shared Infrastructure</span>
+    </div>
+  </div>
+</div>
+
+<div class="summary-grid">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot sacred"></div>
+      <h3>🛡️ Sacred Stone (Vespera World)</h3>
+    </div>
+    <ul>
+      <li>• <span>Platform:</span> creator CRM + portal</li>
+      <li>• <span>Agency:</span> OF mgmt, content, pricing, fan ops</li>
+      <li>• <span>Marketplace:</span> digital + physical products</li>
+      <li>• <span>Revenue:</span> 50/50 creator split, pay-as-you-go agency</li>
+      <li>• <span>Status:</span> <span class="tag deploying">Deploying</span></li>
+      <li>• <span>URL:</span> vesperaworld.com</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot prometheus"></div>
+      <h3>🔥 Prometheus (Torchline + Torchflow)</h3>
+    </div>
+    <ul>
+      <li>• <span>Torchflow.AI:</span> No-code app builder (production)</li>
+      <li>• <span>Torchline:</span> Web dev, IT solutions, consulting</li>
+      <li>• <span>Torchline Freight:</span> Logistics tech</li>
+      <li>• <span>Revenue:</span> SaaS subscriptions + per-project + white-label</li>
+      <li>• <span>Status:</span> <span class="tag active">Active</span></li>
+      <li>• <span>URL:</span> torchflow.ai | torchline.group</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot prysm"></div>
+      <h3>💎 PRYSM (E-Commerce)</h3>
+    </div>
+    <ul>
+      <li>• <span>Confitone:</span> Fitness & consumer products</li>
+      <li>• <span>Pride Harvest:</span> Mushrooms + coffee</li>
+      <li>• <span>Torch & Ember:</span> Furniture marketplace</li>
+      <li>• <span>Dayanna Boutique:</span> Women's fashion (partner)</li>
+      <li>• <span>Status:</span> <span class="tag planning">In Development</span></li>
+      <li>• <span>Channels:</span> Amazon, Walmart, Etsy, TikTok Shop</li>
+    </ul>
+  </div>
+</div>
+
+<div class="summary-grid">
+  <div class="card">
+    <h3 style="font-size: 13px; color: #fbbf24; margin-bottom: 16px;">🏗️ Shared Infrastructure</h3>
+    <table>
+      <tr><th>Layer</th><th>Tools</th><th>Status</th></tr>
+      <tr><td>VPS</td><td>DigitalOcean (aws & hetzner alternatives)</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>PaaS</td><td>Dokploy, Coolify</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>CDN</td><td>Cloudflare</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>VPN</td><td>Tailscale</td><td><span class="tag deploying">Deploying</span></td></tr>
+      <tr><td>Database</td><td>Supabase, Appwrite, MongoDB</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>Auth</td><td>Supabase Auth, Appwrite Auth</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>AI Agents</td><td>Hermes (Max + Ariella), Mastra AI</td><td><span class="tag deploying">Deploying</span></td></tr>
+      <tr><td>Automation</td><td>n8n, CRON</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>Email</td><td>Resend</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>SMS/Phone</td><td>Twilio</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>Storage</td><td>Cloudflare R2, AWS S3, Dropbox</td><td><span class="tag active">Active</span></td></tr>
+      <tr><td>Security</td><td>YubiKey, Tailscale, Cloudflare WAF</td><td><span class="tag deploying">Deploying</span></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size: 13px; color: #fbbf24; margin-bottom: 16px;">💰 Financial Architecture</h3>
+    <ul>
+      <li><span>Payment:</span> EcartPay (primary), Stablecoin (Phase 2)</li>
+      <li><span>Payouts:</span> Paxum, Bank Transfer, Crypto</li>
+      <li><span>Banking:</span> Wise, Airwallex, Mercury</li>
+      <li><span>Revenue Split:</span> 50/50 creator-platform (founding)</li>
+      <li><span>Platform Internal:</span> 40% Tech / 40% Agency / 20% Sales</li>
+      <li><span>Stripe:</span> Phase 4 SFW channels only</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size: 13px; color: #fbbf24; margin-bottom: 16px;">📋 Action Items</h3>
+    <ul>
+      <li><span>[ ]</span> Decide holding company name (Torchstack? Sacred Flame?)</li>
+      <li><span>[ ]</span> Deploy remote desktop (NoMachine + Ubuntu)</li>
+      <li><span>[ ]</span> Complete Ariella bot deployment</li>
+      <li><span>[ ]</span> EcartPay API integration (Phase 1)</li>
+      <li><span>[ ]</span> Profit split schema in Supabase</li>
+      <li><span>[ ]</span> Remote desktop VPN for team (Tailscale)</li>
+      <li><span>[ ]</span> YubiKey rollout (Marcus, Darien, Aryan)</li>
+      <li><span>[ ]</span> Vespera World creator onboarding live</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">
+  Compiled by Max (COA — Chief Operations Agent, All Divisions)<br>
+  For Torchline Holdings Group | Last updated: 2026-06-03
+</div>
+
+</body>
+</html>
